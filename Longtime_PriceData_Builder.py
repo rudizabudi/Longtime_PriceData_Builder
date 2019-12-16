@@ -3,8 +3,8 @@ import os
 from alpha_vantage.timeseries import TimeSeries
 import time
 import pandas as pd
-
-
+from datetime import datetime as dt
+import datetime
 
 config = configparser.ConfigParser()
 config.read(os.getcwd() + '\\' +'config.ini')
@@ -32,7 +32,6 @@ if interval not in possible_intervals:
 if not os.path.exists('Price_Data'):
     os.makedirs('Price_Data')
 
-
 tickers = txt.readlines()
 
 exchange = False
@@ -45,6 +44,8 @@ if j == len(tickers):
     exchange = True
 
 for i, ticker in enumerate(tickers):
+    skip = False
+
     if '\n' in ticker:
         ticker = ticker.strip('\n')
     if ticker.count('.') == 2:
@@ -52,24 +53,38 @@ for i, ticker in enumerate(tickers):
     if exchange == False and '.' in ticker:
         ticker = ticker.replace('.', '-')
 
-    df_new, meta = ts.get_intraday(symbol=ticker, interval=interval, outputsize='full')
-    name = meta['2. Symbol']
+    if ticker + '.csv' in os.listdir(os.getcwd() + '\\' + 'Price_Data'):
+        last_modification = os.stat(os.getcwd() + '\\' + 'Price_Data\\' + ticker + '.csv')
+        time_since_modification = dt.today() - dt.fromtimestamp(last_modification.st_mtime)
+        if time_since_modification < datetime.timedelta(hours=12):
+            skip = True
+            print('No Update necessary for ' + ticker + '.  ' + str(i + 1) + '/' + str(len(tickers)))
 
-    df_new = pd.DataFrame(df_new)
+    if not skip:
+        try:
+            df_new, meta = ts.get_intraday(symbol=ticker, interval=interval, outputsize='full')
+            name = meta['2. Symbol']
+            df_new = pd.DataFrame(df_new)
+        except ValueError:
+            skip = True
+            log_file = open(os.getcwd() + '\\log.txt', 'a')
+            log_file.write('\n' + str(dt.strptime(str(dt.today())[:str(dt.today()).index('.')-1], '%Y-%m-%d %H:%M:%S')) + '. ERROR: No Update possible for ' + ticker )
+            print('ERROR: No Update possible for ' + ticker + '.  ' + str(i + 1) + '/' + str(len(tickers)))
+            log_file.close()
 
     if not os.path.exists('Price_Data'):
         os.makedirs('Price_Data')
 
     contents = os.listdir(os.getcwd() + '\\' + 'Price_Data')
-    if name + '.csv' not in contents:
+    if ticker + '.csv' not in contents and skip == False:
         for column in df_new.columns:
             if '' == column or 'Unnamed' in column:
                 df.drop(column)
         df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
         print(name + ' created.  ' + str(i + 1) + '/' + str(len(tickers)))
-        time.sleep(15)
+        time.sleep(25)
 
-    else:
+    elif skip == False:
         df_old = pd.read_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
         df_old = pd.DataFrame(df_old)
         df_old.set_index('date', inplace=True)
@@ -89,4 +104,6 @@ for i, ticker in enumerate(tickers):
         df_old.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
 
         print(name + ' updated.  ' + str(i+1) + '/' + str(len(tickers)))
-        time.sleep(15)
+        time.sleep(25)
+
+
