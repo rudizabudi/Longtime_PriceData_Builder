@@ -81,7 +81,7 @@ for i, ticker in enumerate(tickers):
             if '' == column or 'Unnamed' in column:
                 df.drop(column)
         df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
-        print(name + ' created.  ' + str(i + 1) + '/' + str(len(tickers)))
+        print(ticker + ' created.  ' + str(i + 1) + '/' + str(len(tickers)))
         time.sleep(25)
 
     elif skip == False:
@@ -103,7 +103,7 @@ for i, ticker in enumerate(tickers):
 
         df_old.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
 
-        print(name + ' updated.  ' + str(i+1) + '/' + str(len(tickers)))
+        print(ticker + ' updated.  ' + str(i+1) + '/' + str(len(tickers)))
         time.sleep(25)
 
 
