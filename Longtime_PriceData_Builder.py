@@ -1,6 +1,7 @@
 import configparser
 import os
 from alpha_vantage.timeseries import TimeSeries
+from alpha_vantage.foreignexchange import ForeignExchange
 import time
 import pandas as pd
 from datetime import datetime as dt
@@ -11,9 +12,12 @@ config.read(os.getcwd() + '\\' +'config.ini')
 api_key = config['Settings']['alpha_vantage_api_key']
 ticker_list = config['Settings']['ticker_list']
 interval = config['Settings']['interval']
+get_type = config['Settings']['get_type']
 
-if len(api_key) == 16:
+if len(api_key) == 16 and get_type == 'Index':
     ts = TimeSeries(key=api_key, output_format='pandas')
+elif len(api_key) == 16 and get_type == 'Forex':
+    fe = ForeignExchange(key='api_key', output_format='pandas')
 else:
     print('ERROR: Enter valid Alpha Vantage API key.')
     exit()
@@ -31,6 +35,10 @@ if interval not in possible_intervals:
 
 if not os.path.exists('Price_Data'):
     os.makedirs('Price_Data')
+
+possible_get_types = ['Index', 'Forex']
+if get_type not in possible_get_types:
+    print('ERROR: Enter valid Get_Type.')
 
 tickers = txt.readlines()
 
@@ -62,9 +70,19 @@ for i, ticker in enumerate(tickers):
 
     if not skip:
         try:
-            df_new, meta = ts.get_intraday(symbol=ticker, interval=interval, outputsize='full')
-            name = meta['2. Symbol']
+            if get_type == 'Index':
+                df_new, meta = ts.get_intraday(symbol=ticker, interval=interval, outputsize='full')
+                name = meta['2. Symbol']
+            elif get_type == 'Forex':
+                df_new, meta = fe.get_currency_exchange_intraday(from_symbol=ticker[:3], to_symbol=ticker[3:], interval=interval, outputsize='full')
+                name = ticker
+
+            # Deal with Windows CON.DE buy
+            if name == 'CON.DE':
+                name = 'C0N.DE'
+                ticker = 'C0N.DE'
             df_new = pd.DataFrame(df_new)
+
         except ValueError:
             skip = True
             log_file = open(os.getcwd() + '\\log.txt', 'a')
@@ -79,13 +97,13 @@ for i, ticker in enumerate(tickers):
     if ticker + '.csv' not in contents and skip == False:
         for column in df_new.columns:
             if '' == column or 'Unnamed' in column:
-                df.drop(column)
-        df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
+                df_new.drop(column)
+        df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' + '\\' + ticker + '.csv')
         print(ticker + ' created.  ' + str(i + 1) + '/' + str(len(tickers)))
         time.sleep(25)
 
     elif skip == False:
-        df_old = pd.read_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
+        df_old = pd.read_csv(os.getcwd() + '\\' + 'Price_Data' + '\\' + ticker + '.csv')
         df_old = pd.DataFrame(df_old)
         df_old.set_index('date', inplace=True)
         df_old = df_old.append(df_new, sort=True)
