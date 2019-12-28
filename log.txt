@@ -1,0 +1,9 @@
+
+2019-12-21 05:45:05. ERROR: No Update possible for BAS.DE
+2019-12-21 05:45:05. ERROR: No Update possible for BAYN.DE
+2019-12-21 05:45:05. ERROR: No Update possible for BEI.DE
+2019-12-21 05:45:05. ERROR: No Update possible for BMW.DE
+2019-12-21 05:46:00. ERROR: No Update possible for CON.DE
+2019-12-21 05:54:05. ERROR: No Update possible for VOW3.DE
+2019-12-21 05:54:05. ERROR: No Update possible for VNA.DE
+2019-12-21 05:54:05. ERROR: No Update possible for WDI.DE

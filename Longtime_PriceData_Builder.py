@@ -56,7 +56,7 @@ for i, ticker in enumerate(tickers):
     if ticker + '.csv' in os.listdir(os.getcwd() + '\\' + 'Price_Data'):
         last_modification = os.stat(os.getcwd() + '\\' + 'Price_Data\\' + ticker + '.csv')
         time_since_modification = dt.today() - dt.fromtimestamp(last_modification.st_mtime)
-        if time_since_modification < datetime.timedelta(hours=12):
+        if time_since_modification < datetime.timedelta(hours=2):
             skip = True
             print('No Update necessary for ' + ticker + '.  ' + str(i + 1) + '/' + str(len(tickers)))
 
@@ -74,13 +74,15 @@ for i, ticker in enumerate(tickers):
 
     if not os.path.exists('Price_Data'):
         os.makedirs('Price_Data')
-
     contents = os.listdir(os.getcwd() + '\\' + 'Price_Data')
     if ticker + '.csv' not in contents and skip == False:
         for column in df_new.columns:
             if '' == column or 'Unnamed' in column:
-                df.drop(column)
-        df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' +  '\\' + name + '.csv')
+                df_new.drop(column)
+        print(0)
+        df_new()
+        df_new.to_csv(os.getcwd() + '\\' + 'Price_Data' + '\\' + name + '.csv')
+        print(1)
         print(ticker + ' created.  ' + str(i + 1) + '/' + str(len(tickers)))
         time.sleep(25)
 
